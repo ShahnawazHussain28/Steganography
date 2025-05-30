@@ -1,0 +1,9 @@
+canvas {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  height: min-content;
+  display: block;
+  background-color: #f7fafc; /* Light background for canvas */
+}
