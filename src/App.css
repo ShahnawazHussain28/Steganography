@@ -17,9 +17,10 @@ canvas {
   transition: all 0.2s linear;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   width: 100%;
+  overflow: hidden;
 }
 
 .option-button:hover .glow{
@@ -31,7 +32,7 @@ canvas {
 .option-button.active {
   border: none;
   color: white;
-  box-shadow: -4px -4px 10px rgba(0, 0, 0, 0.5), 4px 4px 10px rgba(100, 100, 255, 0.1)
+  box-shadow: -4px -4px 10px rgba(0, 0, 0, 0.5), 4px 4px 10px rgba(100, 100, 255, 0.1);
 }
 .option-button button {
   transition: all 0.2s linear;

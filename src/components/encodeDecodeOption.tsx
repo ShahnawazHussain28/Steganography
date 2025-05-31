@@ -18,67 +18,71 @@ export default function EncodeDecodeOption() {
         }`}
       >
         <button
-          className="w-full cursor-pointer p-3 text-xl font-bold glow"
+          className={`w-full cursor-pointer transition-all p-3 text-xl font-bold glow ${
+            !operation ? "min-h-full" : "min-h-[0px]"
+          }`}
           id="encode"
           onClick={() => setOperation("ENCODE")}
         >
           Embed Message
         </button>
-        <div className="w-full p-5">
-          <textarea
-            className="w-full p-2 three-d"
-            id="message-input"
-            placeholder="Enter your secret message here..."
-            rows={4}
-          ></textarea>
-          <label
-            htmlFor="use-password"
-            className="flex items-center gap-2 mt-5 ml-2"
-          >
-            <input
-              onChange={(e) => setUsePassword(e.target.checked)}
-              type="checkbox"
-              id="use-password"
-              className="w-5 h-5"
-            />
-            <span>Use Password</span>
-          </label>
-
-          {usePassword && (
-            <div className="w-full mt-4 relative">
+        {operation === "ENCODE" && (
+          <div className="w-full p-5">
+            <textarea
+              className="w-full p-2 three-d"
+              id="message-input"
+              placeholder="Enter your secret message here..."
+              rows={4}
+            ></textarea>
+            <label
+              htmlFor="use-password"
+              className="flex items-center gap-2 mt-5 ml-2"
+            >
               <input
-                type={showPassword ? "text" : "password"}
-                maxLength={20}
-                className="p-2 pl-4 w-full three-d focus:outline-none"
+                onChange={(e) => setUsePassword(e.target.checked)}
+                type="checkbox"
+                id="use-password"
+                className="w-5 h-5"
               />
-              {!showPassword ? (
-                <FaRegEye
-                  onClick={() => setShowPassword(true)}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 mr-4 text-2xl hover:text-gray-400 cursor-pointer transition"
+              <span>Use Password</span>
+            </label>
+
+            {usePassword && (
+              <div className="w-full mt-4 relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  maxLength={20}
+                  className="p-2 pl-4 w-full three-d focus:outline-none"
                 />
-              ) : (
-                <FaRegEyeSlash
-                  onClick={() => setShowPassword(false)}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 mr-4 text-2xl hover:text-gray-400 cursor-pointer transition"
-                />
-              )}
+                {!showPassword ? (
+                  <FaRegEye
+                    onClick={() => setShowPassword(true)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 mr-4 text-2xl hover:text-gray-400 cursor-pointer transition"
+                  />
+                ) : (
+                  <FaRegEyeSlash
+                    onClick={() => setShowPassword(false)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 mr-4 text-2xl hover:text-gray-400 cursor-pointer transition"
+                  />
+                )}
+              </div>
+            )}
+            <div className="flex justify-between items-center mt-6">
+              <button
+                id="encode"
+                className="py-3 px-6 three-d cursor-pointer !bg-[#29265c] !rounded-full"
+              >
+                Encode and Download
+              </button>
+              <button
+                onClick={() => setOperation(null)}
+                className="mr-4 cursor-pointer hover:bg-red-500/50 py-2 px-4 rounded-full"
+              >
+                Start Over
+              </button>
             </div>
-          )}
-          <div className="flex justify-between items-center mt-6">
-            <button
-              id="encode"
-              className="py-3 px-6 three-d cursor-pointer !bg-[#29265c] !rounded-full"
-            >
-              Encode and Download
-            </button>
-            <button
-              onClick={() => setOperation(null)}
-              className="mr-4 cursor-pointer hover:bg-red-500/50 py-2 px-4 rounded-full"
-            >
-              Start Over
-            </button>
           </div>
-        </div>
+        )}
       </div>
       <div
         className={`option-button grow ${operation === "DECODE" && "active"} ${
@@ -86,7 +90,9 @@ export default function EncodeDecodeOption() {
         }`}
       >
         <button
-          className="w-full cursor-pointer p-3 text-xl font-bold glow"
+          className={`w-full cursor-pointer transition-all p-3 text-xl font-bold glow ${
+            !operation ? "min-h-full" : "min-h-none"
+          }`}
           id="decode"
           onClick={() => setOperation("DECODE")}
         >
