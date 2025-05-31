@@ -33,14 +33,14 @@ export function ImagePicker() {
   })
 
   return (
-    <div className="w-full mx-auto max-w-2xl shadow-xl shadow-[#15152d]">
+    <div className="w-full mx-auto max-w-2xl">
       {!image && (
         <p className="mb-5">
           Please select an image to start with. Either you want to hide a
           message or extract a message
         </p>
       )}
-      <div className="w-full border-2 border-gray-600 border-dashed rounded-lg overflow-hidden">
+      <div className="w-full border-2 border-gray-600 border-dashed shadow-xl shadow-[#15152d] rounded-lg overflow-hidden">
         <div className="w-full relative">
           {image && (
             <IoClose
