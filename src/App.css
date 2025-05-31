@@ -13,7 +13,6 @@ canvas {
   border-radius: 8px;
   background-color: #191738;
   color: #777;
-  text-shadow: none;
   transition: all 0.2s linear;
   display: flex;
   flex-direction: column;
@@ -45,7 +44,6 @@ canvas {
 
 #message-input{
   color: #fff;
-  text-shadow: none;
   transition: all 0.2s linear;
   display: flex;
   flex-direction: column;
