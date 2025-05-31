@@ -7,3 +7,60 @@ canvas {
   display: block;
   background-color: #f7fafc; /* Light background for canvas */
 }
+
+.option-button{
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.5), -4px -4px 10px rgba(100, 100, 255, 0.1);
+  border-radius: 8px;
+  background-color: #191738;
+  color: #777;
+  text-shadow: none;
+  transition: all 0.2s linear;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.option-button:hover .glow{
+  border: none;
+  color: white;
+  text-shadow: 0 0 10px #777, 0 0 20px #777, 0 0 30px #777, 0 0 40px #777, 0 0 50px #777;
+}
+
+.option-button.active {
+  border: none;
+  color: white;
+  box-shadow: -4px -4px 10px rgba(0, 0, 0, 0.5), 4px 4px 10px rgba(100, 100, 255, 0.1)
+}
+.option-button button {
+  transition: all 0.2s linear;
+}
+.option-button.active .glow{
+  border: none;
+  color: white;
+  text-shadow: 0 0 10px #777, 0 0 20px #777, 0 0 30px #777, 0 0 40px #777, 0 0 50px #777;
+}
+
+#message-input{
+  color: #fff;
+  text-shadow: none;
+  transition: all 0.2s linear;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.three-d {
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.5), -4px -4px 10px rgba(100, 100, 255, 0.1);
+  border-radius: 8px;
+  background-color: #191738;
+  transition: all 0.2s linear;
+}
+
+.three-d:focus {
+  outline: none;
+  box-shadow: -4px -4px 10px rgba(0, 0, 0, 0.5), 4px 4px 10px rgba(100, 100, 255, 0.1);
+}
