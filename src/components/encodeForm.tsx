@@ -5,7 +5,8 @@ import { useSteganoContext } from "../context/steganoContext"
 export default function EncodeForm() {
   const [usePassword, setUsePassword] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const { setOperation } = useSteganoContext()
+  const [message, setMessage] = useState("")
+  const { setOperation, encodeAndDownload } = useSteganoContext()
 
   return (
     <div className="w-full p-5">
@@ -14,6 +15,8 @@ export default function EncodeForm() {
         id="message-input"
         placeholder="Enter your secret message here..."
         rows={4}
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
       ></textarea>
       <label
         htmlFor="use-password"
@@ -51,6 +54,7 @@ export default function EncodeForm() {
       <div className="flex justify-between items-center mt-6 mb-3">
         <button
           id="encode"
+          onClick={() => encodeAndDownload(message)}
           className="py-3 px-6 three-d cursor-pointer !bg-[#29265c] !rounded-full"
         >
           Encode and Download

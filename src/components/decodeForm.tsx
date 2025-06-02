@@ -5,8 +5,7 @@ import { useSteganoContext } from "../context/steganoContext"
 export default function DecodeForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [requirePassword, setRequirePassword] = useState(true)
-  const [decodedText, setDecodedText] = useState("")
-  const { setOperation } = useSteganoContext()
+  const { setOperation, decode, outputMessage } = useSteganoContext()
 
   return (
     <div className="p-4">
@@ -37,7 +36,8 @@ export default function DecodeForm() {
       )}
       <div className="flex justify-between items-center mt-6">
         <button
-          id="encode"
+          id="decode"
+          onClick={() => decode()}
           className="py-3 px-6 three-d cursor-pointer !bg-[#29265c] !rounded-full"
         >
           Decode Message
@@ -55,9 +55,9 @@ export default function DecodeForm() {
           id="message-input"
           rows={4}
           disabled
-          value={decodedText}
+          value={outputMessage}
           onClick={() => {
-            navigator.clipboard.writeText(decodedText)
+            navigator.clipboard.writeText(outputMessage)
           }}
         ></textarea>
       </div>
