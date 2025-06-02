@@ -5,7 +5,7 @@ import { LuImageUp } from "react-icons/lu"
 import { useSteganoContext } from "../context/steganoContext"
 
 export function ImagePicker() {
-  const { image, setImage } = useSteganoContext()
+  const { image, setImage, canvasRef } = useSteganoContext()
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -51,13 +51,7 @@ export function ImagePicker() {
               }}
             />
           )}
-          {image && (
-            <img
-              src={image || undefined}
-              alt="selected image"
-              className="w-full"
-            />
-          )}
+          {image && <canvas ref={canvasRef} className="w-full" />}
         </div>
         <label
           htmlFor="dropzone-file"
