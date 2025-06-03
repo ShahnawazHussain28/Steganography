@@ -6,6 +6,7 @@ export default function DecodeForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [requirePassword, setRequirePassword] = useState(true)
   const { setOperation, decode, outputMessage } = useSteganoContext()
+  const [password, setPassword] = useState("")
 
   return (
     <div className="p-4">
@@ -20,6 +21,8 @@ export default function DecodeForm() {
             maxLength={20}
             className="p-2 pl-4 w-full three-d focus:outline-none"
             placeholder="Enter the password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
           {!showPassword ? (
             <FaRegEye
@@ -37,7 +40,7 @@ export default function DecodeForm() {
       <div className="flex justify-between items-center mt-6">
         <button
           id="decode"
-          onClick={() => decode()}
+          onClick={() => decode(password)}
           className="py-3 px-6 three-d cursor-pointer !bg-[#29265c] !rounded-full"
         >
           Decode Message

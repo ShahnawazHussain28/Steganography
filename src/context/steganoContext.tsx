@@ -10,14 +10,16 @@ import {
   type RefObject,
 } from "react"
 
+import Crypto from "crypto-js"
+
 type SteganoContextType = {
   image: string | undefined
   setImage: (image: string | undefined) => void
   operation: "ENCODE" | "DECODE" | null
   setOperation: (operation: "ENCODE" | "DECODE" | null) => void
   canvasRef: RefObject<HTMLCanvasElement | null> | null
-  encodeAndDownload: (message: string) => void
-  decode: () => void
+  encodeAndDownload: (message: string, password?: string) => void
+  decode: (password?: string) => void
   outputMessage: string
 }
 
@@ -46,6 +48,7 @@ export default function SteganoContextProvider({
   const [depth] = useState(1)
   const [operation, setOperation] = useState<"ENCODE" | "DECODE" | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const HEADER_LENGTH = 24
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -64,11 +67,11 @@ export default function SteganoContextProvider({
     }
   }, [image, canvasRef])
 
-  function encodeAndDownload(message: string) {
-    encode(message)
+  function encodeAndDownload(message: string, password?: string) {
+    encode(message, password)
     download()
   }
-  function encode(message: string) {
+  function encode(message: string, password?: string) {
     if (!canvasRef.current) return
     const ctx = canvasRef.current.getContext("2d")
     if (!ctx) return
@@ -78,35 +81,41 @@ export default function SteganoContextProvider({
       canvasRef.current.width,
       canvasRef.current.height
     ).data
+
+    if (password) {
+      message = Crypto.AES.encrypt(message, password).toString()
+    }
 
     let messageBits = message
       .split("")
       .map((char) => char.charCodeAt(0).toString(2).padStart(8, "0"))
       .join("")
 
-    const prefixLen = message.length.toString(2).padStart(24, "0")
-    messageBits = prefixLen + messageBits
+    const prefixLen = message.length.toString(2).padStart(HEADER_LENGTH, "0")
+    const passwordBit = password ? "1" : "0"
+    console.log(messageBits)
+    messageBits = prefixLen + passwordBit + messageBits
+    console.log(messageBits)
 
-    let index = 0
+    let bitsWritten = 0
 
-    let pointer = 0
-    while (index < messageBits.length) {
-      if (pointer % 4 === 3) {
-        pointer++
+    let i = 0
+    while (bitsWritten < messageBits.length) {
+      if (i % 4 === 3) {
+        i++
         continue
       }
-      const r = img[pointer]
-      const binR = r.toString(2)
-      const newR =
-        binR.slice(0, binR.length - depth) + messageBits.charAt(index)
-      img[pointer] = parseInt(newR, 2)
-      index++
-      pointer++
+      const bin = img[i].toString(2)
+      const newByte =
+        bin.slice(0, bin.length - depth) + messageBits.charAt(bitsWritten)
+      img[i] = parseInt(newByte, 2)
+      bitsWritten++
+      i++
     }
     ctx.putImageData(new ImageData(img, canvasRef.current.width), 0, 0)
   }
 
-  function decode() {
+  function decode(password?: string) {
     if (!canvasRef.current) return
     const ctx = canvasRef.current.getContext("2d")
     if (!ctx) return
@@ -117,38 +126,34 @@ export default function SteganoContextProvider({
       canvasRef.current.height
     ).data
 
-    const headerLen = 8
     let lengthBits = ""
-    for (let i = 0; i < headerLen * 4; i += 4) {
-      const binR = img[i + 0].toString(2)
-      const binG = img[i + 1].toString(2)
-      const binB = img[i + 2].toString(2)
-      lengthBits += binR[binR.length - depth]
-      lengthBits += binG[binG.length - depth]
-      lengthBits += binB[binB.length - depth]
+    let i = 0
+    while (lengthBits.length < HEADER_LENGTH) {
+      if (i % 4 === 3) {
+        i++
+        continue
+      }
+      const bit = img[i++].toString(2)
+      lengthBits += bit[bit.length - depth]
     }
+    const passwordByte = img[i % 4 === 3 ? i++ + 1 : i++].toString(2)
+    i++
+    const needPassword = passwordByte[passwordByte.length - depth] === "1"
     const len = parseInt(lengthBits, 2)
-    console.log(len)
+    console.log(len, needPassword)
 
     let bitString = ""
 
-    let pointer = 0
-    let head = 0
     while (bitString.length / 8 < len) {
-      if (head % 4 === 3) {
-        head++
+      if (i % 4 === 3) {
+        i++
         continue
       }
-      if (pointer < headerLen * 3) {
-        head++
-        pointer++
-        continue
-      }
-      const binR = img[head].toString(2)
+      const binR = img[i].toString(2)
       bitString += binR[binR.length - depth]
-      head++
-      pointer++
+      i++
     }
+    console.log(bitString)
 
     const chars = []
     for (let i = 0; i < bitString.length; i += 8) {
@@ -156,7 +161,16 @@ export default function SteganoContextProvider({
       const char = String.fromCharCode(parseInt(byte, 2))
       chars.push(char)
     }
-    setOutputMessage(chars.join(""))
+    let message = chars.join("")
+    console.log(message)
+
+    if (needPassword) {
+      message = Crypto.AES.decrypt(message, password || "").toString(
+        Crypto.enc.Utf8
+      )
+      console.log(message)
+    }
+    setOutputMessage(message)
     bitString = ""
   }
 

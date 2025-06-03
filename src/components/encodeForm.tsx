@@ -6,6 +6,7 @@ export default function EncodeForm() {
   const [usePassword, setUsePassword] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [message, setMessage] = useState("")
+  const [password, setPassword] = useState("")
   const { setOperation, encodeAndDownload } = useSteganoContext()
 
   return (
@@ -37,6 +38,9 @@ export default function EncodeForm() {
             type={showPassword ? "text" : "password"}
             maxLength={20}
             className="p-2 pl-4 w-full three-d focus:outline-none"
+            placeholder="Enter the password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
           {!showPassword ? (
             <FaRegEye
@@ -54,7 +58,7 @@ export default function EncodeForm() {
       <div className="flex justify-between items-center mt-6 mb-3">
         <button
           id="encode"
-          onClick={() => encodeAndDownload(message)}
+          onClick={() => encodeAndDownload(message, password || undefined)}
           className="py-3 px-6 three-d cursor-pointer !bg-[#29265c] !rounded-full"
         >
           Encode and Download
