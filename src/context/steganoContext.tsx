@@ -89,28 +89,19 @@ export default function SteganoContextProvider({
 
     let index = 0
 
-    for (let j = 0; j < canvasRef.current.height; j++) {
-      for (let i = 0; i < canvasRef.current.width; i++) {
-        if (index >= messageBits.length) break
-        const idx = (j * canvasRef.current.width + i) * 4
-
-        const r = img[idx + 0]
-        const g = img[idx + 1]
-        const b = img[idx + 2]
-        const binR = r.toString(2)
-        const binG = g.toString(2)
-        const binB = b.toString(2)
-        const newR =
-          binR.slice(0, binR.length - depth) + messageBits.charAt(index)
-        const newG =
-          binG.slice(0, binG.length - depth) + messageBits.charAt(index + 1)
-        const newB =
-          binB.slice(0, binB.length - depth) + messageBits.charAt(index + 2)
-        img[idx + 0] = parseInt(newR, 2)
-        img[idx + 1] = parseInt(newG, 2)
-        img[idx + 2] = parseInt(newB, 2)
-        index += 3
+    let pointer = 0
+    while (index < messageBits.length) {
+      if (pointer % 4 === 3) {
+        pointer++
+        continue
       }
+      const r = img[pointer]
+      const binR = r.toString(2)
+      const newR =
+        binR.slice(0, binR.length - depth) + messageBits.charAt(index)
+      img[pointer] = parseInt(newR, 2)
+      index++
+      pointer++
     }
     ctx.putImageData(new ImageData(img, canvasRef.current.width), 0, 0)
   }
@@ -137,26 +128,26 @@ export default function SteganoContextProvider({
       lengthBits += binB[binB.length - depth]
     }
     const len = parseInt(lengthBits, 2)
+    console.log(len)
 
     let bitString = ""
 
-    for (let j = 0; j < canvasRef.current.height; j++) {
-      for (let i = 0; i < canvasRef.current.width; i++) {
-        if (bitString.length / 8 >= len) break
-        const idx = (j * canvasRef.current.width + i) * 4
-        if (idx < headerLen * 4) continue
-
-        if (img[idx + 3] === 0) continue
-
-        const binR = img[idx + 0].toString(2)
-        bitString += binR[binR.length - depth]
-
-        const binG = img[idx + 1].toString(2)
-        bitString += binG[binG.length - depth]
-
-        const binB = img[idx + 2].toString(2)
-        bitString += binB[binB.length - depth]
+    let pointer = 0
+    let head = 0
+    while (bitString.length / 8 < len) {
+      if (head % 4 === 3) {
+        head++
+        continue
       }
+      if (pointer < headerLen * 3) {
+        head++
+        pointer++
+        continue
+      }
+      const binR = img[head].toString(2)
+      bitString += binR[binR.length - depth]
+      head++
+      pointer++
     }
 
     const chars = []
