@@ -5,20 +5,30 @@ import { useSteganoContext } from "../context/steganoContext"
 export default function EncodeForm() {
   const [usePassword, setUsePassword] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [message, setMessage] = useState("")
+  // random characters of length 25000
+  const [message, setMessage] = useState(
+    Array.from({ length: 25000 }, () =>
+      String.fromCharCode(Math.floor(Math.random() * 95) + 32)
+    ).join("")
+  )
   const [password, setPassword] = useState("")
-  const { setOperation, encodeAndDownload } = useSteganoContext()
+  const { setOperation, encodeAndDownload, maxCharacters } = useSteganoContext()
 
   return (
     <div className="w-full p-5">
       <textarea
         className="w-full p-2 three-d"
         id="message-input"
-        placeholder="Enter your secret message here..."
+        placeholder={`Enter your secret message here (max ${maxCharacters} characters)...`}
         rows={4}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
       ></textarea>
+      <div className="w-full flex justify-end">
+        <p className="text-gray-400 mt-2">
+          {message.length} / {maxCharacters} characters
+        </p>
+      </div>
       <label
         htmlFor="use-password"
         className="flex items-center gap-2 mt-5 ml-2"

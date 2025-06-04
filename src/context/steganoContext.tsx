@@ -21,6 +21,7 @@ type SteganoContextType = {
   encodeAndDownload: (message: string, password?: string) => void
   decode: (password?: string) => void
   outputMessage: string
+  maxCharacters: number
 }
 
 const SteganoContext = createContext<SteganoContextType>({
@@ -32,6 +33,7 @@ const SteganoContext = createContext<SteganoContextType>({
   encodeAndDownload: () => {},
   decode: () => {},
   outputMessage: "",
+  maxCharacters: 0,
 })
 
 export function useSteganoContext() {
@@ -45,9 +47,10 @@ export default function SteganoContextProvider({
 }) {
   const [image, setImage] = useState<string>()
   const [outputMessage, setOutputMessage] = useState<string>("")
-  const [depth] = useState(1)
   const [operation, setOperation] = useState<"ENCODE" | "DECODE" | null>(null)
+  const [maxCharacters, setMaxCharacters] = useState(0)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const MAX_DEPTH = 3
   const HEADER_LENGTH = 24
 
   useEffect(() => {
@@ -62,6 +65,9 @@ export default function SteganoContextProvider({
         if (canvasRef.current === null) return
         canvasRef.current.width = img.width
         canvasRef.current.height = img.height
+        setMaxCharacters(
+          Math.floor((img.width * img.height * 3 * MAX_DEPTH) / 8)
+        )
         ctx.drawImage(img, 0, 0)
       }
     }
@@ -75,12 +81,14 @@ export default function SteganoContextProvider({
     if (!canvasRef.current) return
     const ctx = canvasRef.current.getContext("2d")
     if (!ctx) return
-    const img = ctx.getImageData(
+
+    const imgData = ctx.getImageData(
       0,
       0,
       canvasRef.current.width,
       canvasRef.current.height
-    ).data
+    )
+    const img = imgData.data
 
     if (password) {
       message = Crypto.AES.encrypt(message, password).toString()
@@ -93,25 +101,47 @@ export default function SteganoContextProvider({
 
     const prefixLen = message.length.toString(2).padStart(HEADER_LENGTH, "0")
     const passwordBit = password ? "1" : "0"
-    console.log(messageBits)
     messageBits = prefixLen + passwordBit + messageBits
-    console.log(messageBits)
 
     let bitsWritten = 0
+    let pixelIndex = 0
+    let currentDepth = 1
 
-    let i = 0
+    const embedBit = (
+      byteValue: number,
+      bitToEmbed: number,
+      depth: number
+    ): number => {
+      const clearMask = ~(1 << (depth - 1))
+      const clearedByte = byteValue & clearMask
+      const newByte = clearedByte | (bitToEmbed << (depth - 1))
+      return newByte
+    }
+
     while (bitsWritten < messageBits.length) {
-      if (i % 4 === 3) {
-        i++
+      if (pixelIndex >= img.length) {
+        currentDepth++
+        if (currentDepth > MAX_DEPTH) {
+          console.error(
+            "Not enough capacity in the image to encode the entire message even with multiple depths."
+          )
+          break
+        }
+        pixelIndex = 0
+      }
+
+      if (pixelIndex % 4 === 3) {
+        pixelIndex++
         continue
       }
-      const bin = img[i].toString(2)
-      const newByte =
-        bin.slice(0, bin.length - depth) + messageBits.charAt(bitsWritten)
-      img[i] = parseInt(newByte, 2)
+
+      const bitToEmbed = parseInt(messageBits.charAt(bitsWritten), 10)
+      img[pixelIndex] = embedBit(img[pixelIndex], bitToEmbed, currentDepth)
+
       bitsWritten++
-      i++
+      pixelIndex++
     }
+
     ctx.putImageData(new ImageData(img, canvasRef.current.width), 0, 0)
   }
 
@@ -119,61 +149,97 @@ export default function SteganoContextProvider({
     if (!canvasRef.current) return
     const ctx = canvasRef.current.getContext("2d")
     if (!ctx) return
-    const img = ctx.getImageData(
+
+    const imgData = ctx.getImageData(
       0,
       0,
       canvasRef.current.width,
       canvasRef.current.height
-    ).data
+    )
+    const img = imgData.data // This is a Uint8ClampedArray
+
+    let pixelIndex = 0
+    let currentDepth = 1
+
+    const getNextBit = (): string | null => {
+      while (true) {
+        if (pixelIndex >= img.length) {
+          currentDepth++
+          if (currentDepth > MAX_DEPTH) {
+            console.error(
+              "Decoding failed: Max depth reached. Not enough capacity to decode header/message."
+            )
+            return null
+          }
+          pixelIndex = 0
+        }
+
+        if (pixelIndex % 4 === 3) {
+          pixelIndex++
+          continue
+        }
+
+        const bit = (img[pixelIndex] >> (currentDepth - 1)) & 1
+        pixelIndex++
+        return bit.toString()
+      }
+    }
 
     let lengthBits = ""
-    let i = 0
     while (lengthBits.length < HEADER_LENGTH) {
-      if (i % 4 === 3) {
-        i++
-        continue
+      const bit = getNextBit()
+      if (bit === null) {
+        setOutputMessage(
+          "Decoding failed: Not enough data to read message header."
+        )
+        return
       }
-      const bit = img[i++].toString(2)
-      lengthBits += bit[bit.length - depth]
+      lengthBits += bit
     }
-    const passwordByte = img[i % 4 === 3 ? i++ + 1 : i++].toString(2)
-    i++
-    const needPassword = passwordByte[passwordByte.length - depth] === "1"
-    const len = parseInt(lengthBits, 2)
-    console.log(len, needPassword)
 
+    const passwordBit = getNextBit()
+    if (passwordBit === null) {
+      setOutputMessage(
+        "Decoding failed: Not enough data to read password flag."
+      )
+      return
+    }
+    const needPassword = passwordBit === "1"
+
+    const len = parseInt(lengthBits, 2)
     let bitString = ""
 
     while (bitString.length / 8 < len) {
-      if (i % 4 === 3) {
-        i++
-        continue
+      const bit = getNextBit()
+      if (bit === null) {
+        setOutputMessage(
+          "Decoding failed: Not enough data to read full message content."
+        )
+        return
       }
-      const binR = img[i].toString(2)
-      bitString += binR[binR.length - depth]
-      i++
+      bitString += bit
     }
-    console.log(bitString)
 
     const chars = []
-    for (let i = 0; i < bitString.length; i += 8) {
-      const byte = bitString.slice(i, i + 8)
+    for (let j = 0; j < bitString.length; j += 8) {
+      const byte = bitString.slice(j, j + 8)
       const char = String.fromCharCode(parseInt(byte, 2))
       chars.push(char)
     }
     let message = chars.join("")
-    console.log(message)
 
     if (needPassword) {
-      message = Crypto.AES.decrypt(message, password || "").toString(
-        Crypto.enc.Utf8
-      )
-      console.log(message)
+      try {
+        message = Crypto.AES.decrypt(message, password || "").toString(
+          Crypto.enc.Utf8
+        )
+      } catch (e) {
+        console.error("Decryption failed:", e)
+        message = "Decryption Failed: Invalid password or corrupted data."
+      }
     }
     setOutputMessage(message)
-    bitString = ""
   }
-
   function download() {
     if (!canvasRef.current) return
     const extension = image?.split(";")[0].split("/")[1]
@@ -195,6 +261,7 @@ export default function SteganoContextProvider({
         encodeAndDownload,
         decode,
         outputMessage,
+        maxCharacters,
       }}
     >
       {children}
