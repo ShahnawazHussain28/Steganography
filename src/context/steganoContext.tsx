@@ -22,6 +22,7 @@ type SteganoContextType = {
   decode: (password?: string) => void
   outputMessage: string
   maxCharacters: number
+  requirePassword: boolean
 }
 
 const SteganoContext = createContext<SteganoContextType>({
@@ -34,6 +35,7 @@ const SteganoContext = createContext<SteganoContextType>({
   decode: () => {},
   outputMessage: "",
   maxCharacters: 0,
+  requirePassword: false,
 })
 
 export function useSteganoContext() {
@@ -49,6 +51,7 @@ export default function SteganoContextProvider({
   const [outputMessage, setOutputMessage] = useState<string>("")
   const [operation, setOperation] = useState<"ENCODE" | "DECODE" | null>(null)
   const [maxCharacters, setMaxCharacters] = useState(0)
+  const [requirePassword, setRequirePassword] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const MAX_DEPTH = 3
   const HEADER_LENGTH = 24
@@ -72,6 +75,21 @@ export default function SteganoContextProvider({
       }
     }
   }, [image, canvasRef])
+
+  useEffect(() => {
+    if (!canvasRef.current || operation !== "DECODE") return
+    const ctx = canvasRef.current.getContext("2d")
+    if (!ctx) return
+    const imgData = ctx.getImageData(
+      0,
+      0,
+      canvasRef.current.width,
+      canvasRef.current.height
+    )
+    const img = imgData.data
+    const passwordBit = img[32] & 1
+    setRequirePassword(passwordBit === 1)
+  }, [operation, canvasRef, image])
 
   function encodeAndDownload(message: string, password?: string) {
     encode(message, password)
@@ -262,6 +280,7 @@ export default function SteganoContextProvider({
         decode,
         outputMessage,
         maxCharacters,
+        requirePassword,
       }}
     >
       {children}

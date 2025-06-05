@@ -4,38 +4,40 @@ import { useSteganoContext } from "../context/steganoContext"
 
 export default function DecodeForm() {
   const [showPassword, setShowPassword] = useState(false)
-  const [requirePassword, setRequirePassword] = useState(true)
-  const { setOperation, decode, outputMessage } = useSteganoContext()
+  const { setOperation, decode, outputMessage, requirePassword } =
+    useSteganoContext()
   const [password, setPassword] = useState("")
 
   return (
-    <div className="p-4">
-      <p>
-        The message is encrypted with a password. Please enter the password
-        below
-      </p>
+    <div className="p-4 w-full">
       {requirePassword && (
-        <div className="w-full mt-4 relative">
-          <input
-            type={showPassword ? "text" : "password"}
-            maxLength={20}
-            className="p-2 pl-4 w-full three-d focus:outline-none"
-            placeholder="Enter the password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          {!showPassword ? (
-            <FaRegEye
-              onClick={() => setShowPassword(true)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 mr-4 text-2xl hover:text-gray-400 cursor-pointer transition"
+        <>
+          <p>
+            The message is encrypted with a password. Please enter the password
+            below
+          </p>
+          <div className="w-full mt-4 relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              maxLength={20}
+              className="p-2 pl-4 w-full three-d focus:outline-none"
+              placeholder="Enter the password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
-          ) : (
-            <FaRegEyeSlash
-              onClick={() => setShowPassword(false)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 mr-4 text-2xl hover:text-gray-400 cursor-pointer transition"
-            />
-          )}
-        </div>
+            {!showPassword ? (
+              <FaRegEye
+                onClick={() => setShowPassword(true)}
+                className="absolute right-0 top-1/2 -translate-y-1/2 mr-4 text-2xl hover:text-gray-400 cursor-pointer transition"
+              />
+            ) : (
+              <FaRegEyeSlash
+                onClick={() => setShowPassword(false)}
+                className="absolute right-0 top-1/2 -translate-y-1/2 mr-4 text-2xl hover:text-gray-400 cursor-pointer transition"
+              />
+            )}
+          </div>
+        </>
       )}
       <div className="flex justify-between items-center mt-6">
         <button
